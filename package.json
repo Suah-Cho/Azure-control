@@ -1,0 +1,19 @@
+{
+  "name": "soft-azure",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
+  "dependencies": {
+    "@azure/arm-compute": "^22.1.0",
+    "@azure/identity": "^4.5.0",
+    "@slack/bolt": "^4.1.1",
+    "dotenv": "^16.4.7"
+  }
+}
