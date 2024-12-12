@@ -16,20 +16,43 @@ const subscriptionId = process.env.AZURE_SUBSCRIPTION_ID;
 const credential = new DefaultAzureCredential();
 const computeClient = new ComputeManagementClient(credential, subscriptionId);
 
-const AU_PROJECT = 'au-project';
-const GROWPILOT = 'growpilot'
-const RESOURCE_GROUP_NAME = 'test1-resource-group';
-const auVMName = 'dev-test-vm';
-const growpilotVMName = 'test1-growpilot-vm';
+const DEV_RESOURCE_GROUP_NAME = 'test1-resource-group';
+const GROWPILOT_RESOURCE_GROUP_NAME = 'croft-growpilot-rg';
+const CROFT_AUPRJ_RG = 'croft-auprj-rg';
+
+const GROWPILOT_RG = ['croft-Bastion-Host', 'croft-staging-vm', 'growpilot-vm'];
+const AU_RG = ['vm-docker-pord-001'];
+const DEV_RG = ['dev-test-vm', 'test1-growpilot-vm']
+
+const getResourceGroup = (vmName) => {
+    try {
+        // console.log(`vmName : ${vmName}`);
+
+        if (DEV_RG.includes(vmName)) {
+            // console.log(DEV_RESOURCE_GROUP_NAME)
+            return DEV_RESOURCE_GROUP_NAME
+        } else if (GROWPILOT_RG.includes(vmName)) {
+            // console.log(GROWPILOT_RESOURCE_GROUP_NAME)
+            return GROWPILOT_RESOURCE_GROUP_NAME
+        } else if (AU_RG.includes(vmName)) {
+            // console.log(CROFT_AUPRJ_RG)
+            return CROFT_AUPRJ_RG
+        } else {
+            return 1
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 const getVMName = (projectName) => {
     const auKeywords = ['au', '호주', '호주 프로젝트', '호주프로젝트', 'dev-test-vm', 'au-project'];
     const growpilotKeywords = ['growpilot', 'nh', 'nh-project', '농협', '그로우파일럿', 'gp', 'test1-growpilot-vm'];
 
     if (auKeywords.includes(projectName)) {
-        return auVMName;
+        return DEV_RG[0];
     } else if (growpilotKeywords.includes(projectName)) {
-        return growpilotVMName;
+        return DEV_RG[1];
     } else {
         return projectName;
     }
@@ -46,9 +69,11 @@ app.command('/stop-vm', async ({ command, ack, say }) => {
     }
 
     const vmName = getVMName(projectName);
+    const vmResourceGroup = getResourceGroup(vmName);
 
     try {
-        await stopVM(vmName);
+        say(`${vmName}을 중지합니다...`);
+        await stopVM(vmName, vmResourceGroup);
         return say(`${vmName}을 성공적으로 중지했습니다.`);
 
     } catch (error) {
@@ -57,10 +82,10 @@ app.command('/stop-vm', async ({ command, ack, say }) => {
     }
 });
 
-const stopVM = async (vmName) => {
+const stopVM = async (vmName, vmResourceGroup) => {
     try {
         // console.log('VM을 중지합니다.', vmName);
-        await computeClient.virtualMachines.beginDeallocateAndWait(RESOURCE_GROUP_NAME, vmName);
+        await computeClient.virtualMachines.beginDeallocateAndWait(vmResourceGroup, vmName);
     } catch (error) {
         console.error(error);
         throw error
@@ -78,9 +103,11 @@ app.command('/start-vm', async ({ command, ack, say }) => {
     }
 
     const vmName = getVMName(projectName);
+    const vmResourceGroup = getResourceGroup(vmName);
+
 
     try {
-        await startVM(vmName);
+        await startVM(vmName, vmResourceGroup);
         return say(`${vmName}을 성공적으로 시작했습니다.`);
 
     } catch (error) {
@@ -89,10 +116,10 @@ app.command('/start-vm', async ({ command, ack, say }) => {
     }
 });
 
-const startVM = async (vmName) => {
+const startVM = async (vmName, vmResourceGroup) => {
     try {
         // console.log('VM을 시작합니다.', vmName);
-        await computeClient.virtualMachines.beginStartAndWait(RESOURCE_GROUP_NAME, vmName);
+        await computeClient.virtualMachines.beginStartAndWait(vmResourceGroup, vmName);
     } catch (error) {
         console.error(error);
         throw error
